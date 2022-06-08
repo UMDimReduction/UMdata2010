@@ -6,10 +6,13 @@ This package contains interactive tutorials used for teaching DATA2010--Tools an
 To install this package, make sure you have the `remotes` package available:
 
 install.packages("remotes")
+
 remotes::install_github("ghuang1845/UMdata2010")
+
 To run a tutorial, run the following code:
 
 learnr::run_tutorial("test", package = "UMdata2010")
+
 The first argument is the name of the tutorial.
 
 ## List of tutorials
