@@ -4,8 +4,9 @@ Title: Interactive Tutorial for DATA2010 (Tools and Techniques for Data Science)
 Version: 0.1.0
 Author: Grace Huang
 Maintainer: Max Turgeon <max.turgeon@umanitoba.ca>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: DATA2010 at the University of Manitoba is a course on Tools and Techniques for Data Science.  
+  Using learnr, this package provides interactive tutorials that students can run to practice
+  topics covered in class.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
