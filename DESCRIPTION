@@ -7,6 +7,11 @@ Maintainer: Max Turgeon <max.turgeon@umanitoba.ca>
 Description: DATA2010 at the University of Manitoba is a course on Tools and Techniques for Data Science.  
   Using learnr, this package provides interactive tutorials that students can run to practice
   topics covered in class.
+Imports:
+ tidyverse,
+ class,
+ caret,
+ Rfast
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
