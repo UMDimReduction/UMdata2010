@@ -8,6 +8,7 @@ Description: DATA2010 at the University of Manitoba is a course on Tools and Tec
   Using learnr, this package provides interactive tutorials that students can run to practice
   topics covered in class.
 Imports:
+ learnr,
  tidyverse,
  class,
  caret,
