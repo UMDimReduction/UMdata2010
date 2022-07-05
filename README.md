@@ -18,7 +18,9 @@ The first argument is the name of the tutorial.
 These are the planned tutorials:
 
 K-nn: K-nearest Neighbors Algorithm
+
 Classification Tree
+
 Regression Tree
 
 
