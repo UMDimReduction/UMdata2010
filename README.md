@@ -17,11 +17,11 @@ The first argument is the name of the tutorial.
 ## List of tutorials
 These are the planned tutorials:
 
-K-nn: K-nearest Neighbors Algorithm
+1. `Knn`: K-nearest Neighbors Algorithm
 
-Classification Tree
+2. `ClassificationTree`: Classification Tree
 
-Regression Tree
+3. `RegressionTree`: Regression Tree
 
 
 
