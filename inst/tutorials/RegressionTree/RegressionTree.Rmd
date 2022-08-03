@@ -13,7 +13,7 @@ library(caret)
 library(randomForest)
 library(gbm)
 library(BART)
-Hitters <- read.csv("Hitters.csv",header = TRUE)
+Hitters <- read.csv("Hitters.csv", header = TRUE)
 set.seed(2010)
 ```
 
@@ -42,7 +42,8 @@ We are going repeat the data cleaning process and delete missing values. We firs
 
 ```{r echo= TRUE, eval=TRUE}
 Hitters <- na.omit(Hitters)
-train_index <- sample(1:nrow(Hitters) , size = nrow(Hitters)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(nrow(Hitters)), size = nrow(Hitters) * 0.9,
+                      replace = FALSE)
 hit_train <- Hitters[train_index, ]
 hit_test <- Hitters[-train_index, ]
 ```
@@ -51,7 +52,8 @@ We use function `tree()` from `tree` package to fit the training set. The target
 is measured in thousands of dollars, and we will log-transform `Salary` so that its distribution has more of a typical bell-shape.
 
 ```{r echo=TRUE, eval=TRUE}
-tree_hit <- tree(log(Salary) ~. -(League + Division + NewLeague), Hitters , subset = train_index )
+tree_hit <- tree(log(Salary) ~ . - (League + Division + NewLeague),
+                 data = Hitters, subset = train_index)
 summary(tree_hit)
 ```
 
@@ -61,41 +63,41 @@ Now we plot the tree.
 
 ```{r echo=TRUE, eval=TRUE}
 plot(tree_hit)
-text(tree_hit , pretty = 0 , cex = 0.5)
-
+text(tree_hit, pretty = 0, cex = 0.5)
 ```
 
 ### Exercise with code
 
 Here's an exercise to make prediction on the test set, and calculate RSS.
+
 ```{r fit, exercise=TRUE, exercise.eval=TRUE}
 set.seed(2010)
 Hitters <- na.omit(Hitters)
 
-train_index <- sample(1:nrow(Hitters) , size = nrow(Hitters)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(nrow(Hitters)), size = nrow(Hitters) * 0.9,
+                      replace = FALSE)
 hit_train <- Hitters[train_index, ]
 hit_test <- Hitters[-train_index, ]
 
-tree_hit <- tree(log(Salary) ~. -(League + Division + NewLeague), Hitters , subset = train_index )
+tree_hit <- tree(log(Salary) ~ . - (League + Division + NewLeague),
+                 data = Hitters, subset = train_index)
 
-#add you code here
-
+# add you code here
 ```
 <div id="filter-hint">
 **Hint:** Remember predicted salary is log-transformed salary
 </div>
 ```{r fit-solution}
-pred_salary <- predict(tree_hit , newdata = hit_test)
- mean((pred_salary - log(hit_test$Salary))^2)
+pred_salary <- predict(tree_hit, newdata = hit_test)
+mean((pred_salary - log(hit_test$Salary))^2)
 ```
 ## Prune the Tree
 
 Similar to a classification problem, we wish to use `cv.tree()` to try to improve our performance.
 
 ```{r echo=TRUE , eval=FALSE}
-cv_hit <- cv.tree(tree_hit )
-plot(cv_hit$size , cv_hit$dev, type = "b")
-
+cv_hit <- cv.tree(tree_hit)
+plot(cv_hit$size, cv_hit$dev, type = "b")
 ```
 From the plot, 8-node tree gives best performance.
 
@@ -107,37 +109,48 @@ Now use function `prune.tree()` to prune the tree, fit the model with test set a
 set.seed(2010)
 Hitters <- na.omit(Hitters)
 
-train_index <- sample(1:nrow(Hitters) , size = nrow(Hitters)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(nrow(Hitters)), size = nrow(Hitters) * 0.9,
+                      replace = FALSE)
 hit_train <- Hitters[train_index, ]
 hit_test <- Hitters[-train_index, ]
 
-tree_hit <- tree(log(Salary) ~. -(League + Division + NewLeague), Hitters , subset = train_index )
+tree_hit <- tree(log(Salary) ~ . - (League + Division + NewLeague),
+                 data = Hitters, subset = train_index)
 
-#add your code here
+# add your code here
+
 
 ```
+
 ```{r prune-solution}
-prune_hit <- prune.tree(tree_hit , best = 8)
-prune_pred <- predict(prune_hit , newdata = hit_test)
+prune_hit <- prune.tree(tree_hit, best = 8)
+prune_pred <- predict(prune_hit, newdata = hit_test)
 mean((prune_pred - log(hit_test$Salary))^2)
-
 ```
+
 ## Bagging and Random Forest
 
 For a regression problem, we can bootstrap, by taking repeated
 samples from the (single) training data set. In this approach we generate B different bootstrapped training data sets. We then train our method on the bth bootstrapped training set in order to get $\hat{f}^{*b}(x)$, and finally average all the predictions, to obtain: $\hat{f}_{bag}(x) = \frac{1}{B}\sum_{b=1}^{B}\hat{f}^{*b}(x)$
 
 ### Example
+
 Here is an example of bagging process using function `randomForest()`. Recall that Bagging is simply a special case of random forest when the number of predictors considered at each split (m) is equal to total number of predictors (p).
+
 ```{r echo = TRUE, eval = TRUE}
-bag_hit <- randomForest::randomForest(log(Salary) ~ . -(League +                     Division + NewLeague) , data = Hitters , subset = train_index , mtry = 16 ,      importance = TRUE)
+library(randomForest)
+bag_hit <- randomForest(log(Salary) ~ . - (League + Division + NewLeague),
+                        data = Hitters, subset = train_index, mtry = 16,
+                        importance = TRUE)
 bag_hit
 ```
 
 Growing a random forest proceeds in exactly the same way, except that we use a smaller value of the `mtry` argument. We use$\sqrt{p}$ variables when building a random forest for regression trees.
 
 ```{r echo = TRUE, eval = TRUE}
-rf_hit <- randomForest::randomForest(log(Salary) ~ . -(League +                     Division + NewLeague) , data = Hitters , subset = train_index , mtry = sqrt(16) ,       importance = TRUE)
+rf_hit <- randomForest(log(Salary) ~ . - (League + Division + NewLeague),
+                       data = Hitters, subset = train_index, mtry = sqrt(16),
+                       importance = TRUE)
 rf_hit
 ```
 
@@ -145,45 +158,59 @@ rf_hit
 
 Fit both models using test set and compare test set MSE.
 * test set MSE for bagging:
+
 ```{r bag, exercise = TRUE, exercise.eval = TRUE}
 set.seed(2010)
+library(randomForest)
 Hitters <- na.omit(Hitters)
 
-train_index <- sample(1:nrow(Hitters) , size = nrow(Hitters)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(nrow(Hitters)), size = nrow(Hitters) * 0.9,
+                      replace = FALSE)
 hit_train <- Hitters[train_index, ]
 hit_test <- Hitters[-train_index, ]
 
-bag_hit <- randomForest::randomForest(log(Salary) ~ . -(League + Division + NewLeague) , data = Hitters , subset = train_index , mtry = 16 , importance = TRUE)
+bag_hit <- randomForest(log(Salary) ~ . - (League + Division + NewLeague),
+                        data = Hitters, subset = train_index, mtry = 16,
+                        importance = TRUE)
 
-#add you code here
-
+# add you code here
 
 
 ```
+
 ```{r bag-solution}
 bag_pred <- predict(bag_hit, newdata = hit_test)
 mean((bag_pred - log(hit_test$Salary))^2)
 ```
+
 * test set MSE for random forest:
 
 ```{r rf, exercise = TRUE , exercise.eval = TRUE}
 set.seed(2010)
+library(randomForest)
 Hitters <- na.omit(Hitters)
 
-train_index <- sample(1:nrow(Hitters) , size = nrow(Hitters)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(nrow(Hitters)), size = nrow(Hitters) * 0.9,
+                      replace = FALSE)
 hit_train <- Hitters[train_index, ]
 hit_test <- Hitters[-train_index, ]
 
-rf_hit <- randomForest::randomForest(log(Salary) ~ . -(League + Division + NewLeague) , data = Hitters , subset = train_index , mtry = sqrt(16) , importance = TRUE)
+bag_hit <- randomForest(log(Salary) ~ . - (League + Division + NewLeague),
+                        data = Hitters, subset = train_index, mtry = 16,
+                        importance = TRUE)
 
-#add your code here
+# add you code here
+
+
 ```
+
 ```{r rf-solution}
 rf_pred <- predict(rf_hit, newdata = hit_test)
 mean((rf_pred - log(hit_test$Salary))^2)
 ```
 
 ## Boosting
+
 The basic idea of boosting for regression trees is similar to classification tree. We will briefly introduce the algorithms of boosting for regression tree.
 
 * Set $\hat{f}(x)=0$ and $r_{i}=y_{i}$ for all i in the training set.
@@ -194,32 +221,46 @@ The basic idea of boosting for regression trees is similar to classification tre
 * Output the boosted model, $\hat{f}(x) = \sum_{b=1}^{B}\lambda\hat{f}^b(x)$
 
 ### Example 
+
 ```{r echo=TRUE, eval=TRUE}
-boost_hit <- gbm(log(Salary) ~. -(League + Division + NewLeague), data = hit_train , distribution = "gaussian" , n.trees = 5000 , interaction.depth = 4 )
-summary(boost_hit , plotit = FALSE)
+boost_hit <- gbm(log(Salary) ~ . - (League + Division + NewLeague),
+                 data = hit_train, distribution = "gaussian", n.trees = 5000,
+                 interaction.depth = 4)
+summary(boost_hit, plotit = FALSE)
 ```
+
 From the plot, we see `CAtBat` is the most important variables.
 
 ### Exercise with code
+
 Now we fit the model to test set and calculate MSE
+
 ```{r bst, exercise = TRUE, exercise.eval = TRUE}
 set.seed(2010)
 Hitters <- na.omit(Hitters)
 
-train_index <- sample(1:nrow(Hitters) , size = nrow(Hitters)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(nrow(Hitters)), size = nrow(Hitters) * 0.9,
+                      replace = FALSE)
 hit_train <- Hitters[train_index, ]
 hit_test <- Hitters[-train_index, ]
 
-boost_hit <- gbm(log(Salary) ~. -(League + Division + NewLeague), data = hit_train , distribution = "gaussian" , n.trees = 5000 , interaction.depth = 4 )
-# add your code here
-```
-```{r bst-solution}
-boost_pred <- predict(boost_hit , newdata = hit_test , n.trees = 5000)
+boost_hit <- gbm(log(Salary) ~ . - (League + Division + NewLeague),
+                 data = hit_train, distribution = "gaussian", n.trees = 5000,
+                 interaction.depth = 4)
 
-mean((boost_pred-log(hit_test$Salary))^2)
+# add your code here
+
+
+```
+
+```{r bst-solution}
+boost_pred <- predict(boost_hit, newdata = hit_test, n.trees = 5000)
+
+mean((boost_pred - log(hit_test$Salary))^2)
 ```
 
 ## Bayesian Additive Regression Tree
+
 Bayesian additive regression tree (BART) is a combination of both method that we discussed above: each tree is constructed in a random manner as in bagging and random forests, and each tree tries to
 capture signal not yet accounted for by the current model, as in boosting.
 
@@ -235,21 +276,21 @@ We will briefly go through the algorithm of BART:
 4. Compute the mean after L burn-in samples, $\hat{f}(x) = \frac{1}{B-L}\sum_{b=L+1}^{B}\hat{f}^{b}(x)$.
 
 ### Example
+
 we are going to use function `gbart()` from package `BART`. To run the `gbart()` function, we must first create matrices of predictors for the training and test data. We run BART with default settings.
+
 ```{r echo = TRUE, eval = TRUE}
-x <- Hitters[, c(1:13,16:18)]
+x <- Hitters[, c(1:13, 16:18)]
 y <- Hitters[, 19]
 xtrain <- x[train_index, ]
 ytrain <- log(y[train_index])
 xtest <- x[-train_index, ]
 ytest <- log(y[-train_index])
-bart <- gbart(xtrain , ytrain , x.test = xtest)
+bart <- gbart(xtrain, ytrain, x.test = xtest)
 
-#we compute test error
+# we compute test error
 bart_pred <- bart$yhat.test.mean
 mean((ytest - bart_pred)^2)
-
-
 ```
-As a result, by comparing 6 different models, random forest gives us the best prediction of our test data with test set MSE 0.186843.     
 
+As a result, by comparing 6 different models, random forest gives us the best prediction of our test data with test set MSE `r mean((ytest - bart_pred)^2)`.

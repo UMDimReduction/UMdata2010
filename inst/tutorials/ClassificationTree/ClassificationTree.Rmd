@@ -4,7 +4,7 @@ output: learnr::tutorial
 runtime: shiny_prerendered
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 library(learnr)
 knitr::opts_chunk$set(echo = FALSE)
 library(tree)
@@ -12,9 +12,8 @@ library(tidyverse)
 library(caret)
 library(randomForest)
 library(gbm)
-wdbc <- read.csv("wdbc.csv",header = TRUE)
+wdbc <- read.csv("wdbc.csv", header = TRUE)
 set.seed(2010)
-
 ```
 
 
@@ -35,28 +34,27 @@ Decision trees are binary trees, which means each node splits into two branches 
 
 For a classification tree, we predict that each observation belongs to the most commonly occurring class of training observations in the region to which it belongs. In interpreting the results of a classification tree, we are often interested not only in the class prediction corresponding to a particular terminal node region, but also in the class proportions among the training observations that fall into that region.
 
-
 ### Example
 
 Here's a simple example using Breast Cancer Wisconsin Diagnostic data set, which was downloaded from the UCI Machine Learning repository.
 
 We are going repeat the data cleaning process that was used in Knn tutorial. We first split the 90% of the data into training set, and rest of the into test set.
 
-```{r echo=TRUE, eval=TRUE}
+```{r echo = TRUE, eval = TRUE}
 #we need to convert it to factor for further estimation
 wdbc$target <- factor(wdbc$target)
 glimpse(wdbc)
 
 #random selection of 90% data.
-train_index <- sample(1:nrow(wdbc) , size = nrow(wdbc)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(wdbc), size = nrow(wdbc) * 0.9, replace = FALSE)
 wdbc_train <- wdbc[train_index, ]
 wdbc_test <- wdbc[-train_index, ]
 ```
 
 We use function `tree()` from `tree` package to fit the training set. The target variable is called `target`, and we want to use all remaining variables to try to predict it.
 
-```{r echo=TRUE, eval=TRUE}
-tree_wdbc <- tree(target~ . , data = wdbc , subset = train_index)
+```{r echo = TRUE, eval = TRUE}
+tree_wdbc <- tree(target ~ ., data = wdbc, subset = train_index)
 summary(tree_wdbc)
 ```
 
@@ -66,17 +64,17 @@ Note that for `subset` statement, we use the index of our training set instead o
 
 Now, we are going to plot the decision tree.
 
-```{r echo=TRUE, eval=TRUE}
+```{r echo = TRUE, eval = TRUE}
 plot(tree_wdbc)
-text(tree_wdbc , pretty=0 , cex=0.5)
+text(tree_wdbc, pretty = 0, cex = 0.5)
 ```
 
 The argument `pretty = 0` instructs R to include the category names for any qualitative predictors, rather than simply displaying a letter for each category.
 
 Next, we are going to fit the model to the test set using function `predict()`.
 
-```{r echo=TRUE, eval=TRUE}
-wdbc_predict <- predict(tree_wdbc , wdbc_test , type="class")
+```{r echo = TRUE, eval = TRUE}
+wdbc_predict <- predict(tree_wdbc, wdbc_test, type = "class")
 wdbc_predict
 ```
 
@@ -84,16 +82,16 @@ wdbc_predict
 
 Here's an exercise to calculate its accuracy rate and F-score using `M` as positive level.
 
-```{r fscore, exercise=TRUE, exercise.eval=TRUE}
+```{r fscore, exercise = TRUE, exercise.eval = TRUE}
 set.seed(2010)
 wdbc$target <- factor(wdbc$target)
 
-train_index <- sample(1:nrow(wdbc) , size = nrow(wdbc)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(wdbc), size = nrow(wdbc) * 0.9, replace = FALSE)
 wdbc_train <- wdbc[train_index, ]
 wdbc_test <- wdbc[-train_index, ]
 
-tree_wdbc <- tree(target~ . ,data=wdbc , subset=train_index)
-wdbc_predict <- predict(tree_wdbc , wdbc_test , type="class")
+tree_wdbc <- tree(target ~ ., data = wdbc, subset = train_index)
+wdbc_predict <- predict(tree_wdbc, wdbc_test, type = "class")
 
 #add your code here
 
@@ -101,18 +99,18 @@ wdbc_predict <- predict(tree_wdbc , wdbc_test , type="class")
 
 ```{r fscore-solution}
 #using confusionMatrix() from "caret" package
-confusionMatrix(table(wdbc_predict , wdbc_test$target) , mode="everything" , positive = "M")
+confusionMatrix(table(wdbc_predict, wdbc_test$target), mode = "everything",
+                positive = "M")
 
 #or using the table provided
-accrate <- (34+18)/57
+accrate <- (34 + 18) / 57
 accrate
 #Prec means Precision
-prec <- 18/(18+1) 
+prec <- 18 / (18 + 1)
 #rc means recall
-rc <- 18/(18+4)
-f1 <- 2*(prec*rc)/(prec+rc)
+rc <- 18 / (18 + 4)
+f1 <- 2 * (prec * rc) / (prec + rc)
 f1
-
 ```
 
 ## Prune the tree
@@ -122,8 +120,7 @@ To improve the result, we may consider pruning the tree. Pruning process may hel
 The function `cv.tree()` performs cross-validation in order to determine the optimal level of tree complexity; cost complexity pruning is used in order to select a sequence of trees for consideration.
 
 ```{r echo = TRUE, eval = FALSE}
-
-cv_wdbc <- cv.tree(tree_wdbc ,  FUN = prune.misclass)
+cv_wdbc <- cv.tree(tree_wdbc,  FUN = prune.misclass)
 cv_wdbc
 ```
 
@@ -133,34 +130,37 @@ We use the argument `FUN = prune.misclass` in order to indicate that we want the
 
 Now we prune the tree to 7-node tree using function `prune.misclass()`.
 
-```{r echo=TRUE, eval=TRUE}
-prune_wdbc <- prune.misclass(tree_wdbc , best = 7)
+```{r echo = TRUE, eval = TRUE}
+prune_wdbc <- prune.misclass(tree_wdbc, best = 7)
 plot(prune_wdbc)
-text(prune_wdbc , pretty = 0, cex = 0.5)
+text(prune_wdbc, pretty = 0, cex = 0.5)
 ```
 
 ### Exercise with code
 
 Fit the pruned tree to test set and calculate f-sore with `M` as positive level.
 
-```{r prune, exercise=TRUE , exercise.eval=TRUE}
+```{r prune, exercise = TRUE , exercise.eval = TRUE}
 set.seed(2010)
 wdbc$target <- factor(wdbc$target)
 
-train_index <- sample(1:nrow(wdbc) , size = nrow(wdbc)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(wdbc), size = nrow(wdbc) * 0.9, replace = FALSE)
 wdbc_train <- wdbc[train_index, ]
 wdbc_test <- wdbc[-train_index, ]
 
-tree_wdbc <- tree(target~ . ,data=wdbc , subset=train_index)
-prune_wdbc <- prune.misclass(tree_wdbc , best = 7)
+tree_wdbc <- tree(target ~ ., data = wdbc, subset = train_index)
+prune_wdbc <- prune.misclass(tree_wdbc, best = 7)
 #add you code
 
 ```
+
 ```{r prune-solution}
-wdbc_prune_predict <- predict(prune_wdbc , wdbc_test , type = "class")
-table(wdbc_prune_predict , wdbc_test$target)
-confusionMatrix(table(wdbc_prune_predict , wdbc_test$target) , mode = "everything" , positive= "M")
+wdbc_prune_predict <- predict(prune_wdbc, wdbc_test, type = "class")
+table(wdbc_prune_predict, wdbc_test$target)
+confusionMatrix(table(wdbc_prune_predict, wdbc_test$target), mode = "everything",
+                positive = "M")
 ```
+
 ## Bagging and Random Forest
 
 Bootstrap aggregation, or bagging, is a general-purpose procedure for reducing the bagging variance of a statistical learning method; we introduce it here because it is particularly useful and frequently used in the context of decision trees.
@@ -170,16 +170,21 @@ For a classification problem, given a test observation, we can record the class 
 Random forest provide an improvement over bagged trees by way of a small tweak that decorrelates the trees.
 
 Bagging is simply a special case of random forest when the number of predictors considered at each split (m) is equal to total number of predictors (p).
-```{r echo=TRUE,eval=TRUE}
-bag_wdbc <- randomForest::randomForest(target~ . , data = wdbc ,                              subset = train_index , mtry = 30 , importance = TRUE)
+
+```{r echo = TRUE, eval = TRUE}
+bag_wdbc <- randomForest::randomForest(target ~ ., data = wdbc,
+                                       subset = train_index, mtry = 30,
+                                       importance = TRUE)
 
 bag_wdbc
 ```
 
 Growing a random forest proceeds in exactly the same way, except that we use a smaller value of the mtry argument. We use$\sqrt{p}$ variables when building a random forest for classification trees.
 
-```{r echo=TRUE,eval=TRUE}
-rf_wdbc <- randomForest::randomForest(target~. , data = wdbc , subset = train_index , mtry = sqrt(30) , importance = TRUE)
+```{r echo = TRUE, eval = TRUE}
+rf_wdbc <- randomForest::randomForest(target ~ ., data = wdbc,
+                                      subset = train_index, mtry = sqrt(30),
+                                      importance = TRUE)
 
 rf_wdbc
 ```
@@ -190,49 +195,59 @@ Fit both models using test set and compare f-scores with `M` as positive level.
 
 * f-score for bagging:
 
-```{r  bag, exercise=TRUE, exercise.eval=TRUE}
+```{r bag, exercise = TRUE, exercise.eval = TRUE}
 set.seed(2010)
 wdbc$target <- factor(wdbc$target)
 
-train_index <- sample(1:nrow(wdbc) , size = nrow(wdbc)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(wdbc), size = nrow(wdbc) * 0.9, replace = FALSE)
 wdbc_train <- wdbc[train_index, ]
 wdbc_test <- wdbc[-train_index, ]
 
-bag_wdbc <- randomForest::randomForest(target~. , data = wdbc , subset = train_index , mtry = 30 , improtance = TRUE)
+bag_wdbc <- randomForest::randomForest(target ~ ., data = wdbc,
+                                       subset = train_index, mtry = 30,
+                                       importance = TRUE)
 
 #add you code here
 ```
+
 ```{r bag-solution}
-bag_predict <- predict(bag_wdbc , newdata = wdbc_test)
-confusionMatrix(table(bag_predict , wdbc_test$target) , mode = "everything" , positive = "M")
+bag_predict <- predict(bag_wdbc, newdata = wdbc_test)
+confusionMatrix(table(bag_predict, wdbc_test$target), mode = "everything",
+                positive = "M")
 ```
 
 * f-score for random forest:
 
-```{r  rf, exercise=TRUE, exercise.eval=TRUE}
+```{r rf, exercise = TRUE, exercise.eval = TRUE}
 set.seed(2010)
 wdbc$target <- factor(wdbc$target)
 
-train_index <- sample(1:nrow(wdbc) , size = nrow(wdbc)*0.9 , replace = FALSE) 
+train_index <- sample(seq_len(wdbc), size = nrow(wdbc) * 0.9, replace = FALSE)
 wdbc_train <- wdbc[train_index, ]
 wdbc_test <- wdbc[-train_index, ]
 
-rf_wdbc <- randomForest::randomForest(target~. , data = wdbc , subset = train_index , mtry = sqrt(30) , improtance = TRUE)
+rf_wdbc <- randomForest::randomForest(target ~ ., data = wdbc,
+                                      subset = train_index, mtry = sqrt(30),
+                                      importance = TRUE)
 
 #add you code here
 
 ```
+
 ```{r rf-solution}
-rf_predict <- predict(rf_wdbc , newdata = wdbc_test)
-confusionMatrix(table(rf_predict , wdbc_test$target) , mode = "everything" , positive = "M")
+rf_predict <- predict(rf_wdbc, newdata = wdbc_test)
+confusionMatrix(table(rf_predict, wdbc_test$target), mode = "everything",
+                positive = "M")
 ```
 
 Also using `randomForest::importance()` can view the importance of each variable.
 
 Here is an example using random forest model:
+
 ```{r echo = TRUE , eval = TRUE}
 randomForest::importance(rf_wdbc)
 ```
+
 As we can see from the result, `concave_pts_worst`, `perimeter_worst`, `area_worst`, `radius_worst ` are the most important variables.
 
 ## Boosting
@@ -249,11 +264,13 @@ Boosting has three tuning parameters:
 
 * The number d of splits in each tree, which controls the complexity of the boosted ensemble.
 
-```{r echo=TRUE, eval=TRUE}
+```{r echo = TRUE, eval = TRUE}
 #we will have to convert target value to 0 , 1
-wdbc_train$target<-ifelse(wdbc_train$target=="M",1,0)
+wdbc_train$target <- ifelse(wdbc_train$target == "M", 1, 0)
 
-boost_wdbc <- gbm::gbm(target~. , data = wdbc_train , distribution = "bernoulli" , n.tree = 5000 , interaction.depth = 4)
+boost_wdbc <- gbm::gbm(target ~ ., data = wdbc_train,
+                       distribution = "bernoulli", n.tree = 5000,
+                       interaction.depth = 4)
 
 summary(boost_wdbc, plotit = FALSE)
 ```
@@ -265,12 +282,14 @@ Now we fit the model to test set and evaluate f-score.
 
 Note that using `type = 'response'`, the function will return the probability of getting `B` or `M`. Thus, we need to choose a cut-off point at 0.5.
 
-```{r echo=TRUE,eval=TRUE}
-wdbc_test$target<-ifelse(wdbc_test$target=="M",1,0)
-boost_pred <- predict(boost_wdbc , newdata = wdbc_test , n.trees = 5000 , type = "response")
+```{r echo = TRUE, eval = TRUE}
+wdbc_test$target <- ifelse(wdbc_test$target == "M", 1, 0)
+boost_pred <- predict(boost_wdbc, newdata = wdbc_test,
+                      n.trees = 5000, type = "response")
 predict_class <- boost_pred > 0.5
-predict_class<-ifelse(predict_class=="TRUE",1,0)
-confusionMatrix(table(predict_class,wdbc_test$target) , mode = "everything" , positive = "1")
+predict_class <- ifelse(predict_class == "TRUE", 1, 0)
+confusionMatrix(table(predict_class, wdbc_test$target), mode = "everything",
+                positive = "1")
 ```
 
 As a result, by comparing 5 different models, random forest gives us the best prediction of our test data with f-score 1.

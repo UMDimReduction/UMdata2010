@@ -11,8 +11,9 @@ library(tidyverse)
 library(class)
 library(caret)
 library(Rfast)
-wdbc <- read.csv("wdbc.csv",header = TRUE)
+wdbc <- read.csv("wdbc.csv", header = TRUE)
 ```
+
 ## Welcome
 
 This is a tutorial on Knn algorithm using R. It was created for the course DATA2010 (Tools and Techniques in Data Science) at the University of Manitoba.
@@ -33,8 +34,6 @@ In k-NN classification, the output is a class membership. An object is classifie
 
 In k-NN regression, the output is the property value for the object. This value is the average of the values of k nearest neighbors.
 
-
-
 ### Example 
 
 Here's a simple example using Breast Cancer Wisconsin Diagnostic dataset, which was downloaded from the UCI Machine Learning repository
@@ -42,33 +41,35 @@ Here's a simple example using Breast Cancer Wisconsin Diagnostic dataset, which 
 ```{r echo=TRUE, eval=TRUE}
 set.seed(2010)
 
-#we need to convert it to factor for further estimation
+# we need to convert it to factor for further estimation
 wdbc$target <- factor(wdbc$target)
 glimpse(wdbc)
 ```
 
 We first split the 90% of the data into training set, and rest of the into test set.
 ```{r  echo=TRUE, eval=TRUE}
-#random selection of 90% data.
-train_index <- sample(1:nrow(wdbc),size = nrow(wdbc)*0.9,replace = FALSE) 
-wdbc_train <- wdbc[train_index,]
-wdbc_test <- wdbc[-train_index,]
+# random selection of 90% data.
+train_index <- sample(seq_len(wdbc), size = nrow(wdbc) * 0.9, replace = FALSE)
+wdbc_train <- wdbc[train_index, ]
+wdbc_test <- wdbc[-train_index, ]
 ```
 
 We use function `knn()`, and we first choose k=5, and computing accuracy of the prediction regarding to test set result.
 
 ```{r  echo=TRUE, eval=TRUE}
-knn.5 <- class::knn(train = wdbc_train[,-1],test = wdbc_test[,-1],
-                    cl = wdbc_train$target,k = 5)
+knn_5 <- class::knn(
+  train = wdbc_train[, -1], test = wdbc_test[, -1],
+  cl = wdbc_train$target, k = 5
+)
 
-ACC.5 <- 100 * sum(wdbc_test[,1] == knn.5)/NROW(wdbc_test[,1])
-ACC.5
+ACC_5 <- 100 * sum(wdbc_test[, 1] == knn_5) / nrow(wdbc_test[, 1])
+ACC_5
 ```
 
 We can also calculate the accuracy rate using function `confusionMatrix()` from package `caret`.
 
 ```{r  echo=TRUE, eval=TRUE}
-confusionMatrix(table(knn.5,wdbc_test$target))
+confusionMatrix(table(knn_5, wdbc_test$target))
 ```
 
 As shown above, our accuracy rate is high, because our data set is unbalanced. Normally, with unbalanced data, accuracy rate tends to be high. Thus, we can use F-score to determine the fit of the model. 
@@ -77,40 +78,45 @@ As shown above, our accuracy rate is high, because our data set is unbalanced. N
 
 Here's an exercise to try `knn()` function with a different k value and calculate its accuracy rate
 
-
-
 ```{r  practice_knn, exercise=TRUE, exercise.eval=TRUE}
 set.seed(2010)
-#we need to convert it to factor for further estimation
+# we need to convert it to factor for further estimation
 wdbc$target <- factor(wdbc$target)
-#random selection of 90% data.
-train_index <- sample(1:nrow(wdbc),size = nrow(wdbc)*0.9,replace = FALSE) 
-wdbc_train <- wdbc[train_index,]
-wdbc_test <- wdbc[-train_index,]
-#Complete the code
-  
+# random selection of 90% data.
+train_index <- sample(seq_len(wdbc), size = nrow(wdbc) * 0.9, replace = FALSE)
+wdbc_train <- wdbc[train_index, ]
+wdbc_test <- wdbc[-train_index, ]
+# Complete the code
+
 
 ```
 
 ## KNN with Cross-Validation
+
 To choose the best k value, we conduct n-fold cross-validation considering its bias-variance trade-off.
 
 We use `knn_cv()` from `Rfast` packages.
 
 ```{r echo = TRUE, eval = TRUE}
 # We now need to convert covariates into a matrix
-x <- as.matrix(wdbc[,-1])
-y <- wdbc[,1]
+x <- as.matrix(wdbc[, -1])
+y <- wdbc[, 1]
 ```
+
 We use `knn.cv()` from `Rfast` packages instead of `class` packages which allow us to choose number of folds.
+
 ```{r echo = TRUE, eval = TRUE}
-mod <- Rfast::knn.cv(nfolds = 10, y = y, x = x, k = c(1:25), dist.type = "euclidean", type = "C", method = "average")
+mod <- Rfast::knn.cv(nfolds = 10, y = y, x = x, k = c(1:25),
+                     dist.type = "euclidean", type = "C", method = "average")
 ```
-`type="C"` means we want to do classification.
+
+Note that `type="C"` means we want to do classification.
 
 We plot the result.
+
 ```{r plot, echo = TRUE, eval = TRUE}
-plot(x = 1:25,y = mod$crit,ylab = "accuracy rate according to different k values",type = "b")
+plot(x = 1:25, y = mod$crit,
+     ylab = "accuracy rate according to different k values", type = "b")
 ```
 
 From the plot, we obtained the highest accuracy when k=13. Accuracy also looks good when k=5, and by Parsimony Principle, we would prefer k=5 since it is a simpler model.
@@ -118,12 +124,13 @@ From the plot, we obtained the highest accuracy when k=13. Accuracy also looks g
 ### Exercise with Code
 
 Here's an exercise to try `knn_cv()` function with different n value and calculate its accuracy rate
+
 ```{r knn_cv_practice, exercise=TRUE, exersice.eval=TRUE}
 wdbc$target <- factor(wdbc$target)
-x <- as.matrix(wdbc[ ,-1])
-y <- wdbc[ ,1]
-#Complete the Code
+x <- as.matrix(wdbc[, -1])
+y <- wdbc[, 1]
 
+# Complete the Code
 
 
 ```
