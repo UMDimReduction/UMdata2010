@@ -6,7 +6,7 @@ This package contains interactive tutorials used for teaching DATA2010--Tools an
 To install this package, make sure you have the `remotes` package available:
 ```{r echo=TRUE}
 install.packages("remotes")
-remotes::install_github("ghuang1845/UMdata2010")
+remotes::install_github("UMDimReduction/UMdata2010")
 ```
 To run a tutorial, run the following code:
 ```{r echo=TRUE}
